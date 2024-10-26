@@ -50,6 +50,7 @@
 #define SC_GetPid 54
 #define SC_Multiply 55
 #define SC_Sleep 56
+#define SC_Wait_pid 57
 #ifndef IN_ASM
 
 /* The system call interface.  These are the operations the Nachos
@@ -182,7 +183,7 @@ int Close(OpenFileId id);
 int CreateSemaphore(char *name, int semval);
 
 int Wait(char *name);
-
+void Wait_pid(int pid);
 int Signal(char *name);
 
 /* User-level thread operations: Fork and Yield.  To allow multiple

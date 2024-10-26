@@ -1,4 +1,4 @@
-// exception.cc
+	// exception.cc
 //	Entry point into the Nachos kernel from user programs.
 //	There are two kinds of things that can cause control to
 //	transfer back to here from user code:
@@ -408,6 +408,20 @@ void handle_SC_Wait() {
     delete[] name;
     return move_program_counter();
 }
+void handle_SC_Wait_pid() {
+    DEBUG(dbgSys, "Sleep " << kernel->machine->ReadRegister(4));
+
+    /* Process SysAdd Systemcall*/
+
+    SysSleep(
+        /* int op1 */ (int)kernel->machine->ReadRegister(4));
+
+
+    return move_program_counter();
+
+}
+
+
 
 void handle_SC_Signal() {
     int virtAddr = kernel->machine->ReadRegister(4);
@@ -433,6 +447,9 @@ void handle_SC_GetPid() {
 
 void ExceptionHandler(ExceptionType which) {
     int type = kernel->machine->ReadRegister(2);
+     int badvaddr=kernel->machine->ReadRegister(BadVAddrReg);
+            int vpn=badvaddr/PageSize;
+
 
     DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
 
@@ -442,6 +459,13 @@ void ExceptionHandler(ExceptionType which) {
             DEBUG(dbgSys, "Switch to system mode\n");
             break;
         case PageFaultException:
+//	    int badvaddr=kernel->machine->ReadRegister(BadVAddrReg);
+//	    int vpn=badvaddr/PageSize;
+	    if (!kernel->currentThread->space->pageTable[vpn].valid) { 
+		    kernel->currentThread->space->LoadPage(badvaddr); // Load the missing page
+		 } 
+          // currentThread->space->LoadPage(vpn,FreePage);
+	  return;
         case ReadOnlyException:
         case BusErrorException:
         case AddressErrorException:
@@ -502,6 +526,8 @@ void ExceptionHandler(ExceptionType which) {
                     return handle_SC_Signal();
                 case SC_GetPid:
                     return handle_SC_GetPid();
+	        case SC_Wait_pid:
+		    return handle_SC_Wait_pid();
                 /**
                  * Handle all not implemented syscalls
                  * If you want to write a new handler for syscall:

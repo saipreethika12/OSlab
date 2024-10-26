@@ -56,7 +56,7 @@ static void CheckEndian() {
 
 Machine::Machine(bool debug) {
     int i;
-
+     kernel->gPhysPageBitMap=new Bitmap(NumPhysPages);
     for (i = 0; i < NumTotalRegs; i++) registers[i] = 0;
     mainMemory = new char[MemorySize];
     for (i = 0; i < MemorySize; i++) mainMemory[i] = 0;
@@ -74,7 +74,8 @@ Machine::Machine(bool debug) {
 }
 
 //----------------------------------------------------------------------
-// Machine::~Machine
+// Machine::
+// ~Machine
 // 	De-allocate the data structures used to simulate user program execution.
 //----------------------------------------------------------------------
 

@@ -75,7 +75,7 @@ int main() {
             return 1;
         }
     }
-    water_machine = Exec("voinuoc");
+    water_machine = Exec("voinuoc" , 2);
     if (water_machine == 1) {
         PrintString("Create water machine failed\n");
         return 1;

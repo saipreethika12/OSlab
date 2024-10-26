@@ -59,6 +59,25 @@ Scheduler::~Scheduler() {
 //	"thread" is the thread to be put on the ready list.
 //----------------------------------------------------------------------
 
+
+
+
+
+bool Scheduler:: is_present(std::priority_queue<Thread*, std::vector<Thread*>, ThreadComparator> readyQueue, int pid) {
+    // Copy the priority queue to avoid modifying the original
+    std::priority_queue<Thread*, std::vector<Thread*>, ThreadComparator> tempQueue = readyQueue;
+
+    while (!tempQueue.empty()) {
+        Thread* thread = tempQueue.top(); // Get the top element
+        tempQueue.pop(); // Remove it from the temp queue
+
+        if (thread->processID == pid) {
+            return true; // Found a matching ProcessID
+        }
+    }
+
+    return false; // No matching ProcessID found
+}
 void Scheduler::ReadyToRun(Thread *thread) {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
     DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
@@ -82,10 +101,37 @@ Thread *Scheduler::FindNextToRun() {
         return NULL;
     } else {
 	    Thread* temp = readyQueue.top();
-      //  return readyList->RemoveFront();
-        readyQueue.pop();
-	std::cout<< temp->priority<<" ";
-	return temp;
+     if(temp->wait_pid == -1){
+     readyQueue.pop();
+        std::cout<< temp->priority<<" ";
+        return temp;
+
+     }else{
+	     vector<Thread*> dummyv;
+	     Thread* temp;
+       while(readyQueue.top()->wait_pid != -1 && !readyQueue.empty()){
+	        temp = readyQueue.top();
+	       readyQueue.pop();
+         int p = temp->wait_pid;
+	 bool find = is_present(readyQueue, p);
+	 if(!find){
+		 for(auto i : dummyv){
+       readyQueue.push(i);
+       }
+
+	 return temp;
+	 }else{
+	 dummyv.push_back(temp);
+	 }
+       }
+       temp= readyQueue.top();
+       readyQueue.pop();
+       for(auto i : dummyv){
+       readyQueue.push(i);
+       }
+       return temp;
+      
+     }	
     }
 }
 

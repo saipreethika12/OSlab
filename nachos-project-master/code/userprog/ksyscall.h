@@ -237,6 +237,9 @@ int SysWait(char* name) {
 
     return 0;
 }
+void SysWait_pid( int pid){
+  kernel->currentThread->wait_pid=pid; 
+}
 
 int SysSignal(char* name) {
     int res = kernel->semTab->Signal(name);

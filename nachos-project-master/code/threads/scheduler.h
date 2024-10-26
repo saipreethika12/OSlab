@@ -37,7 +37,7 @@ class Scheduler {
     void CheckToBeDestroyed();  // Check if thread that had been
                                 // running needs to be deleted
     void Print();               // Print contents of ready list
-
+    bool is_present(std::priority_queue<Thread*, std::vector<Thread*>, ThreadComparator> readyQueue, int pid);
     // SelfTest for scheduler is implemented in class Thread
 
    private:

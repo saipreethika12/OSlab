@@ -64,6 +64,7 @@ void Bitmap::Mark(int which) {
 //----------------------------------------------------------------------
 
 void Bitmap::Clear(int which) {
+	cout<< "whiuch" << which;
     ASSERT(which >= 0 && which < numBits);
 
     map[which / BitsInWord] &= ~(1 << (which % BitsInWord));

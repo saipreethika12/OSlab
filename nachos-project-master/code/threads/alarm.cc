@@ -43,9 +43,10 @@ Alarm::Alarm(bool doRandom) { timer = new Timer(doRandom, this); }
 void Alarm::CallBack() {
     Interrupt *interrupt = kernel->interrupt;
     MachineStatus status = interrupt->getStatus();
-    ListIterator<Thread*> iter(kernel->sleepList);
-    for(;!iter.IsDone();iter.Next())
-    {
+    /*if(kernel->sleepList != NULL){
+	ListIterator<Thread*> iter(kernel->sleepList);
+    	for(;!iter.IsDone();iter.Next())
+    	{
 	    Thread * thread=iter.Item();
 	    int k=thread->sleepTicksLeft;
 	    thread->sleepTicksLeft=k-1;
@@ -54,7 +55,8 @@ void Alarm::CallBack() {
 		    kernel->scheduler->ReadyToRun(thread);
 		    kernel->sleepList->Remove(thread);
 	    }
-    }
+    	}
+    }*/
     if (status != IdleMode) {
         interrupt->YieldOnReturn();
     }

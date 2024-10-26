@@ -10,10 +10,16 @@
 int main() {
        //	PrintNum(ReadNum());
        int i;
+       int pid3;
+       int pid1;
+     
+      
+      
+  
        //while(1){
        for(i=0;i<10000;i++){
 	      // for(i=0;i<200000;i++);
-             PrintString("n");
+             PrintString("num_io ");
        }
        return 0;
 }

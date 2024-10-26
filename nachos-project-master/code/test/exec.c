@@ -16,6 +16,7 @@ int main() {
         Write("Exec failed: ", 14, stdout);
         PrintNum(pid);
     } 
+    Wait_pid(pid);
     //else
       //  Join(pid);
       for(i=0;i<5000;i+=1){

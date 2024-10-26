@@ -103,6 +103,8 @@ AddrSpace::~AddrSpace() {
 
 AddrSpace::AddrSpace(char *fileName) {
     OpenFile *executable = kernel->fileSystem->Open(fileName);
+    //executableFile=executable;
+    filename = fileName;
     NoffHeader noffH;
     unsigned int i, size, j, offset;
     unsigned int numCodePage,
@@ -136,6 +138,7 @@ AddrSpace::AddrSpace(char *fileName) {
 
     // Check the available memory enough to load new process
     // debug
+    cout<<"Numclear check";
     if (numPages > kernel->gPhysPageBitMap->NumClear()) {
         DEBUG(dbgAddr, "Not enough free space");
         numPages = 0;
@@ -148,9 +151,11 @@ AddrSpace::AddrSpace(char *fileName) {
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;  // for now, virtual page # = phys page #
-        pageTable[i].physicalPage = kernel->gPhysPageBitMap->FindAndSet();
+       // pageTable[i].physicalPage = kernel->gPhysPageBitMap->FindAndSet();
         // cerr << pageTable[i].physicalPage << endl;
-        pageTable[i].valid = TRUE;
+	//pageTable[i].physicalPage = -1;
+       // pageTable[i].valid = TRUE;
+        pageTable[i].valid = FALSE;
         pageTable[i].use = FALSE;
         pageTable[i].dirty = FALSE;
         pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
@@ -163,7 +168,7 @@ AddrSpace::AddrSpace(char *fileName) {
         DEBUG(dbgAddr, "phyPage " << pageTable[i].physicalPage);
     }
 
-    if (noffH.code.size > 0) {
+   /* if (noffH.code.size > 0) {
         for (i = 0; i < numPages; i++)
             executable->ReadAt(
                 &(kernel->machine->mainMemory[noffH.code.virtualAddr]) +
@@ -177,7 +182,7 @@ AddrSpace::AddrSpace(char *fileName) {
                 &(kernel->machine->mainMemory[noffH.initData.virtualAddr]) +
                     (pageTable[i].physicalPage * PageSize),
                 PageSize, noffH.initData.inFileAddr + (i * PageSize));
-    }
+    }*/
 
     kernel->addrLock->V();
     delete executable;
@@ -257,11 +262,52 @@ void AddrSpace::SaveState() {}
 //      For now, tell the machine where to find the page table.
 //----------------------------------------------------------------------
 
+void AddrSpace::LoadPage(int badvaddr) {
+	int vpn=badvaddr/PageSize;
+    OpenFile *executable = kernel->fileSystem->Open(filename);
+    int freePage = kernel->gPhysPageBitMap->FindAndSet();  // Find a free physical page
+    NoffHeader noffH;
+      executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
+    if ((noffH.noffMagic != NOFFMAGIC) &&
+        (WordToHost(noffH.noffMagic) == NOFFMAGIC))
+        SwapHeader(&noffH);
+    ASSERT(noffH.noffMagic == NOFFMAGIC);
+    // Read the page from the executable file into physical memory
+    //executableFile->ReadAt(&(machine->mainMemory[freePage * PageSize]), PageSize, vpn * PageSize);
+     
+    pageTable[vpn].physicalPage = freePage;
+    pageTable[vpn].valid = true;
+    printf("page loaded");
+    // Optionally, you can initialize other page table fields (use, dirty, etc.)
+    pageTable[vpn].use = false;
+    pageTable[vpn].dirty = false;
+	if(badvaddr>=noffH.code.virtualAddr && badvaddr<=noffH.code.size+noffH.code.virtualAddr){
+		executable->ReadAt(
+                &(kernel->machine->mainMemory[noffH.code.virtualAddr]) +
+                    (pageTable[vpn].physicalPage * PageSize),
+                PageSize, noffH.code.inFileAddr + (vpn * PageSize));
+
+	}
+	if(badvaddr>=noffH.initData.virtualAddr && badvaddr<=noffH.initData.size+noffH.initData.virtualAddr && noffH.initData.size > 0){
+		executable->ReadAt(
+                &(kernel->machine->mainMemory[noffH.initData.virtualAddr]) +
+                    (pageTable[vpn].physicalPage * PageSize),
+                PageSize, noffH.initData.inFileAddr + (vpn * PageSize));
+
+	}
+}
+
 void AddrSpace::RestoreState() {
     kernel->machine->pageTable = pageTable;
     kernel->machine->pageTableSize = numPages;
 }
 
+/*int AddrSpace::PageReplacementPolicy() { 
+	static int nextVictim = 0;
+       	int victim = nextVictim; 
+	nextVictim = (nextVictim + 1) % NumPhysPages;
+       	return victim; 
+}*/
 //----------------------------------------------------------------------
 // AddrSpace::Translate
 //  Translate the virtual address in _vaddr_ to a physical address
